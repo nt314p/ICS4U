@@ -2,90 +2,54 @@ package com.bayviewglen.dayone;
 
 public class AddressBook {
 
-	private Contact[] contacts;
+	private ContactList contacts;
 
 	public AddressBook() {
-		contacts = new Contact[0];
+		contacts = new ContactList();
 	}
-
-	private void trimToSize(int size) {
-		Contact[] newContacts = new Contact[size];
-		for (int i = 0; i < size; i++) {
-			if (contacts.length > i) {
-				newContacts[i] = contacts[i];
-			} else {
-				newContacts[i] = null;
-			}
-		}
-		contacts = newContacts;
-	}
-
-	private void trim() {
-		int size = contacts.length;
-		for (int i = 0; i < contacts.length; i++) {
-			if (contacts[i] == null) {
-				size--;
-			}
-		}
-		Contact[] newContacts = new Contact[size];
-		int j = 0;
-		for (int i = 0; i < contacts.length; i++) {
-			if (contacts[i] != null) {
-				newContacts[j] = contacts[i];
-				j++;
-			}
-		}
-		contacts = newContacts;
-	}
-
+	
 	public void addContact(Contact contact) {
-		trimToSize(contacts.length + 1);
-		contacts[contacts.length - 1] = contact;
+		contacts.addContact(contact);
+	}
+	
+	public void deleteContact(Contact contact) {
+		contacts.deleteContact(contact);
 	}
 
 	public Contact getContactByFName(String firstName) {
-		for (int i = 0; i < contacts.length; i++) {
-			if (contacts[i].getFirstName().equalsIgnoreCase(firstName)) {
-				return contacts[i];
+		for (Contact c : contacts) {
+			if (c.getFirstName().equalsIgnoreCase(firstName)) {
+				return c;
 			}
 		}
 		return null;
 	}
 
 	public Contact getContactByLName(String lastName) {
-		for (int i = 0; i < contacts.length; i++) {
-			if (contacts[i].getLastName().equalsIgnoreCase(lastName)) {
-				return contacts[i];
+		for (Contact c : contacts) {
+			if (c.getLastName().equalsIgnoreCase(lastName)) {
+				return c;
 			}
 		}
 		return null;
 	}
 
 	public Contact getContactByPhone(String phoneNumber) {
-		for (int i = 0; i < contacts.length; i++) {
-			if (contacts[i].getPhoneNumber().equals(phoneNumber)) {
-				return contacts[i];
+		for (Contact c : contacts) {
+			if (c.getPhoneNumber().equals(phoneNumber)) {
+				return c;
 			}
 		}
 		return null;
 	}
 
 	public Contact getContact(Contact target) {
-		for (int i = 0; i < contacts.length; i++) {
-			if (contacts[i].equals(target)) {
-				return contacts[i];
+		for (Contact c : contacts) {
+			if (c.equals(target)) {
+				return c;
 			}
 		}
 		return null;
-	}
-
-	private int getContactIndex(Contact target) {
-		for (int i = 0; i < contacts.length; i++) {
-			if (contacts[i].equals(target)) {
-				return i;
-			}
-		}
-		return -1;
 	}
 
 	public boolean editContactFName(Contact target, String newValue) {
@@ -93,9 +57,8 @@ public class AddressBook {
 		if (edit != null) {
 			edit.setFirstName(newValue);
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	public boolean editContactLName(Contact target, String newValue) {
@@ -103,9 +66,8 @@ public class AddressBook {
 		if (edit != null) {
 			edit.setLastName(newValue);
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	public boolean editContactPhone(Contact target, String newValue) {
@@ -113,20 +75,8 @@ public class AddressBook {
 		if (edit != null) {
 			edit.setPhoneNumber(newValue);
 			return true;
-		} else {
-			return false;
 		}
-	}
-
-	public boolean deleteContact(Contact target) {
-		int index = getContactIndex(target);
-		if (index != -1) {
-			contacts[index] = null;
-			trim();
-			return true;
-		} else {
-			return false;
-		}
+		return false;
 	}
 
 	public String toString() {
@@ -136,9 +86,7 @@ public class AddressBook {
 			ret += c.toStringDisp() + "\n";
 		}
 		ret += "+-------------+-------------+--------------+\n";
-
 		return ret;
-
 	}
 
 }

@@ -18,12 +18,17 @@ public class AddressBookDriver {
 		System.out.println(contacts);
 
 		System.out.println(contacts.getContactByFName("Nick"));
-		System.out.println(contacts.deleteContact(c));
+		contacts.deleteContact(c);
 		System.out.println(contacts.getContactByFName("Nick"));
 		System.out.println(contacts);
 
 		System.out.println(contacts.editContactPhone(e, "650"));
 		System.out.println(contacts);
+		contacts.deleteContact(d);
+		contacts.deleteContact(e);
+		contacts.addContact(c);
+		System.out.println(contacts);
+		
 
 		Scanner reader = new Scanner(System.in);
 		Contact selected = null;
