@@ -25,26 +25,4 @@ public class ContactNode {
 	public void setData(Contact data) {
 		this.data = data;
 	}
-
-	public boolean isTail() {
-		return link == null;
-	}
-
-	public ContactNode getTail() {
-		if (isTail()) {
-			return this;
-		}
-		return link.getTail();
-	}
-
-	public int getLenghtToTail() {
-		if (isTail()) return 1;
-		return link.getLenghtToTail(1);
-	}
-
-	private int getLenghtToTail(int len) {
-		if (isTail()) return len + 1;
-		return link.getLenghtToTail(len + 1);
-	}
-
 }
