@@ -14,32 +14,12 @@ public class Queen {
 		x++;
 	}
 
-	public void incY() {
-		y++;
-	}
-
 	public boolean canShift(int n) {
 		return x + 1 < n;
 	}
 
 	public boolean conflictsWith(Queen other) {
-		boolean a = x == other.x || y == other.y;
-		boolean b = a || (x != other.x && Math.abs((y - other.y) / ((double) (x - other.x))) == 1);
-		return b;
-	}
-
-	public static boolean hasConflict(Queen[] queens) {
-		boolean conflicts = false;
-
-		for (int i = 0; i < queens.length - 1; i++) {
-			for (int j = i + 1; j < queens.length; j++) {
-				conflicts |= queens[i].conflictsWith(queens[j]);
-				if (conflicts) {
-					return true;
-				}
-			}
-		}
-		return conflicts;
+		return x == other.x || y == other.y || Math.abs((y - other.y) / ((double) (x - other.x))) == 1;
 	}
 
 	public String print(int n) {
@@ -53,36 +33,5 @@ public class Queen {
 		}
 		return ret;
 	}
-	
-	/*
-	 Q + + + + + + + + + + + + + + + + + + + + + + + + + + +
-	 + + Q + + + + + + + + + + + + + + + + + + + + + + + + +
-	 + + + + Q + + + + + + + + + + + + + + + + + + + + + + +
-	 + Q + + + + + + + + + + + + + + + + + + + + + + + + + +
-	 + + + Q + + + + + + + + + + + + + + + + + + + + + + + +
-	 + + + + + + + + Q + + + + + + + + + + + + + + + + + + +
-	 + + + + + + + + + + Q + + + + + + + + + + + + + + + + +
-	 + + + + + + + + + + + + Q + + + + + + + + + + + + + + +
-	 + + + + + + + + + + + + + + Q + + + + + + + + + + + + +
-	 + + + + + + + + + + + + + + + + Q + + + + + + + + + + +
-	 + + + + + + + + + + + + + + + + + + + + + + Q + + + + +
-	 + + + + + + + + + + + + + + + + + + + + + + + + Q + + +
-	 + + + + + + + + + + + + + + + + + + + + + Q + + + + + +
-	 + + + + + + + + + + + + + + + + + + + + + + + + + + + Q
-	 + + + + + + + + + + + + + + + + + + + + + + + + + Q + +
-	 + + + + + + + + + + + + + + + + + + + + + + + Q + + + +
-	 + + + + + + + + + + + + + + + + + + + + + + + + + + Q +
-	 + + + + + + Q + + + + + + + + + + + + + + + + + + + + +
-	 + + + + + + + + + + + Q + + + + + + + + + + + + + + + +
-	 + + + + + + + + + + + + + + + Q + + + + + + + + + + + +
-	 + + + + + + + + + + + + + + + + + Q + + + + + + + + + +
-	 + + + + + + + Q + + + + + + + + + + + + + + + + + + + +
-	 + + + + + + + + + Q + + + + + + + + + + + + + + + + + +
-	 + + + + + + + + + + + + + Q + + + + + + + + + + + + + +
-	 + + + + + + + + + + + + + + + + + + + Q + + + + + + + +
-	 + + + + + Q + + + + + + + + + + + + + + + + + + + + + +
-	 + + + + + + + + + + + + + + + + + + + + Q + + + + + + +
-	 + + + + + + + + + + + + + + + + + + Q + + + + + + + + +
-	 */
 
 }
