@@ -13,6 +13,14 @@ public class Queen {
 	public void incX() {
 		x++;
 	}
+	
+	public int getX() {
+		return x;
+	}
+	
+	public int getY() {
+		return y;
+	}
 
 	public boolean canShift(int n) {
 		return x + 1 < n;
