@@ -4,7 +4,7 @@ package com.bayviewglen.nqueens;
 public class NQueensSolve {
 	
 	public static void main(String[] args) {
-		int n = 29;
+		int n = 30;
 		QueenStack solution = solve(n);
 		
 		while (!solution.isEmpty()) {
