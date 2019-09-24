@@ -6,7 +6,7 @@ public class IntArrayStack implements Stack {
 	private int manyItems;
 
 	public IntArrayStack() {
-		data = new Integer[1000];
+		data = new Integer[100];
 		manyItems = 0;
 	}
 

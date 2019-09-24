@@ -4,7 +4,7 @@ import processing.core.PApplet;
 
 public class NQueensVisualize extends PApplet {
 
-	int n = 29;
+	int n = 29	;
 	float width = 800 / (n + 1);
 	QueenStack solution;
 	int[][] colormap;
