@@ -27,6 +27,14 @@ public class Term {
 		return type == 2;
 	}
 	
+	public boolean isOperand() {
+		return type == 0;
+	}
+	
+	public boolean isParenthesis() {
+		return type == 1;
+	}
+	
 	public Double getOperand() {
 		if (isOperator())
 			throw new IllegalStateException("Not an operand.");
@@ -34,8 +42,14 @@ public class Term {
 	}
 	
 	public String getOperator() {
-		if (!isOperator())
+		if (isOperand())
 			throw new IllegalStateException("Not an operator.");
+		return value;
+	}
+	
+	public String getParenthesis() {
+		if (isParenthesis())
+			throw new IllegalStateException("Not an parenthesis.");
 		return value;
 	}
 	
