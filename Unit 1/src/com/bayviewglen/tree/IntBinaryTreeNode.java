@@ -49,5 +49,28 @@ public class IntBinaryTreeNode {
 	public void setData(Integer data) {
 		this.data = data;
 	}
+	
+	public boolean hasChild(int direction) {
+		if (direction == -1)
+			return hasLeftChild();
+		else if (direction == 1)
+			return hasRightChild();
+		return false;
+	}
+	
+	public IntBinaryTreeNode getChild(int direction) {
+		if (direction == -1)
+			return getLeftChild();
+		else if (direction == 1)
+			return getRightChild();
+		return null;
+	}
+	
+	public void setChild(IntBinaryTreeNode child, int direction) {
+		if (direction == -1)
+			setLeftChild(child);
+		else if (direction == 1)
+			setRightChild(child);
+	}
 
 }
