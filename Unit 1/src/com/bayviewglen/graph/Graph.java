@@ -4,24 +4,42 @@ import java.util.ArrayList;
 
 public class Graph {
 
-	private ArrayList<Integer>[] data;
+	private ArrayList<Edge>[] data;
 
 	public Graph(int vertices) {
 		data = new ArrayList[vertices];
 		for (int i = 0; i < data.length; i++) {
-			data[i] = new ArrayList<Integer>();
+			data[i] = new ArrayList<Edge>();
 		}
 	}
 
-	public void addEdge(int src, int dest) {
-		data[src].add(dest);
-		data[dest].add(src);
+	public void addEdge(int src, int dest, int weight) {
+		if (src != dest) {
+			data[src].add(new Edge(dest, weight));
+			data[dest].add(new Edge(src, weight));
+		}
+	}
+
+	public int V() {
+		return data.length;
+	}
+
+	public int E() {
+		int e = 0;
+		for (ArrayList<Edge> edges : data) {
+			e += edges.size();
+		}
+		return e;
+	}
+
+	public ArrayList<Edge> adj(int v) {
+		return data[v];
 	}
 
 	public static void depthFirstSearch(Graph g, int v) {
 		boolean[] marked = new boolean[g.data.length];
 		int[] edgeTo = new int[g.data.length];
-		
+
 		dfs(g, v, marked, edgeTo);
 		for (int i = 0; i < marked.length; i++) {
 			if (marked[i]) {
@@ -41,18 +59,30 @@ public class Graph {
 
 	private static void dfs(Graph g, int v, boolean[] marked, int[] edgeTo) {
 		marked[v] = true;
-		ArrayList<Integer> neighbors = g.data[v];
-		for (int n : neighbors) {
-			if (!marked[n]) {
-				dfs(g, n, marked, edgeTo);
-				edgeTo[n] = v;
+		ArrayList<Edge> neighbors = g.data[v];
+		for (Edge n : neighbors) {
+			if (!marked[n.dest]) {
+				dfs(g, n.dest, marked, edgeTo);
+				edgeTo[n.dest] = v;
 			}
 		}
 	}
 	
-	public static void pathTo(Graph g, int src) {
-		ArrayList<Integer> path = new ArrayList<Integer>();
+	static class Edge {
+		private int dest;
+		private int weight;
 		
+		public Edge (int dest, int weight) {
+			this.dest = dest;
+			this.weight = weight;
+		}
+		
+		public int dest() {
+			return dest;
+		}
+		
+		public int weight() {
+			return weight;
+		}
 	}
-
 }
