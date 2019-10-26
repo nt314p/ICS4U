@@ -15,9 +15,13 @@ public class Graph {
 
 	public void addEdge(int src, int dest, int weight) {
 		if (src != dest) {
-			data[src].add(new Edge(dest, weight));
-			data[dest].add(new Edge(src, weight));
+			data[src].add(new Edge(src, dest, weight));
+			data[dest].add(new Edge(dest, src, weight));
 		}
+	}
+	
+	public void addEdge(Edge e) {
+		addEdge(e.src, e.dest, e.weight);
 	}
 
 	public int V() {
@@ -34,6 +38,50 @@ public class Graph {
 
 	public ArrayList<Edge> adj(int v) {
 		return data[v];
+	}
+
+	public String toString() {
+		String ret = "";
+		for (int i = 0; i < data.length; i++) {
+			for (Edge e : data[i]) {
+				if (e.dest >= i) // remove for full edge print
+					ret += "E: " + i + "-" + e.dest + " W: " + e.weight + " | ";
+			}
+			ret += "\n";
+		}
+		return ret;
+	}
+
+	static class Edge implements Comparable<Edge> {
+		private int src;
+		private int dest;
+		private int weight;
+
+		public Edge(int src, int dest, int weight) {
+			this.src = src;
+			this.dest = dest;
+			this.weight = weight;
+		}
+		
+		public int src() {
+			return src;
+		}
+
+		public int dest() {
+			return dest;
+		}
+
+		public int weight() {
+			return weight;
+		}
+
+		public int compareTo(Edge o) {
+			return this.weight - o.weight;
+		}
+		
+		public String toString() {
+			return "S: " + src + "D: " + dest + " W: " + weight;
+		}
 	}
 
 	public static void depthFirstSearch(Graph g, int v) {
@@ -65,24 +113,6 @@ public class Graph {
 				dfs(g, n.dest, marked, edgeTo);
 				edgeTo[n.dest] = v;
 			}
-		}
-	}
-	
-	static class Edge {
-		private int dest;
-		private int weight;
-		
-		public Edge (int dest, int weight) {
-			this.dest = dest;
-			this.weight = weight;
-		}
-		
-		public int dest() {
-			return dest;
-		}
-		
-		public int weight() {
-			return weight;
 		}
 	}
 }

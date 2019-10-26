@@ -20,11 +20,16 @@ public class GraphDriver {
 		reader.nextInt(); // throw away edges
 		
 		while (reader.hasNextInt()) {
-			g.addEdge(reader.nextInt(), reader.nextInt());
+			g.addEdge(reader.nextInt(), reader.nextInt(), reader.nextInt());
 		}	
 		reader.close();
 		
 		Graph.depthFirstSearch(g, 0);
+		System.out.println(g);
+		
+		Graph mst = PrimsAlgorithm.minSpanningTree(g);
+		System.out.println();
+		System.out.println(mst);
 	}
 
 }
