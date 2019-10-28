@@ -37,13 +37,4 @@ public class PrimsAlgorithm {
 		return mst;
 	}
 
-	public static int minVertex(int[] arr) {
-		int minVertex = 0;
-		for (int i = 1; i < arr.length; i++) {
-			if (arr[i] < arr[minVertex])
-				minVertex = i;
-		}
-		return minVertex;
-	}
-
 }

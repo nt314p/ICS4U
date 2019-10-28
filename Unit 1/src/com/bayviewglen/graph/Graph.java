@@ -52,7 +52,7 @@ public class Graph {
 		return ret;
 	}
 
-	static class Edge implements Comparable<Edge> {
+	static class Edge {
 		private int src;
 		private int dest;
 		private int weight;
@@ -73,10 +73,6 @@ public class Graph {
 
 		public int weight() {
 			return weight;
-		}
-
-		public int compareTo(Edge o) {
-			return this.weight - o.weight;
 		}
 		
 		public String toString() {
