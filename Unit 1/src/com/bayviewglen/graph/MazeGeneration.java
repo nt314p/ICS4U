@@ -11,8 +11,8 @@ public class MazeGeneration extends PApplet {
 	static Graph g;
 	static Graph mst;
 	static int[][] grid;
-	static int spacing = 100;
-	static int len = 1000;
+	static int spacing = 35;
+	static int len = 800;
 	static int size = len / spacing - 2;
 	static int offset = 40;
 	static float strokeW = (float) (spacing * 2.0 / 3);
@@ -48,7 +48,7 @@ public class MazeGeneration extends PApplet {
 		stroke(255);
 		strokeWeight(spacing * 2 / 3);
 		strokeCap(PROJECT);
-		textSize(15);
+		textSize(12);
 		frameRate(10);
 	}
 
