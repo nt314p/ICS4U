@@ -68,6 +68,8 @@ function solve(n) {
 }
 
 function drawQueens(queens) {
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, c.width, c.height);
     console.log("drawing!");
     ctx.fillStyle = "red";
     for (var i = 0; i < queens.length; i++) {
