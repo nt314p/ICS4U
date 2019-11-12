@@ -7,11 +7,9 @@ var numPlayers = 4;
 var winningPoints = 10;
 var turn = 0;
 var players = [];
-
-
-
-
-
+var canvas, ctx;
+var mouseX = 0;
+var mouseY = 0;
 
 class Player {
     constructor(name) {
@@ -26,6 +24,7 @@ class Player {
         if (this.name == "GOD") {
             console.log(this.name + " drew: " + card);
         }
+    }
 
     addCard(card) {
         this.hand.addCard(card);
@@ -209,8 +208,27 @@ class Card {
         return this.cardNum == other.cardNum;
     }
 
+    draw(x, y) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(x, y, 120, 200);
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(this.getName(), x + 60, y + 50);
+        ctx.font = "80px Arial";
+        ctx.fillText(this.cardNum, x + 60, y + 150);
+    }
+
     toString() {
         return this.getName() + ", " + this.cardNum;
+    }
+}
+
+class Sprite {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.draw = function () { };
     }
 }
 
@@ -234,11 +252,20 @@ function randomElement(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
+document.addEventListener('mousemove', e => {
+    var rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+  });
+
 
 // -- Actual Game Code -- //
 
 
 window.onload = function () {    // initialization
+    canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d");
+    draw();
     players[0] = new HumanPlayer("GOD");
 
     for (var i = 0; i < numPlayers; i++) {
@@ -253,6 +280,16 @@ window.onload = function () {    // initialization
     }
     console.log(players[0].hand.toString());
 };
+var cq = new Card(11);
+var ca = new Card(2);
+
+function draw() {
+    window.requestAnimationFrame(draw);
+    ctx.fillStyle = "lightblue";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    cq.draw(100, 100);
+    ca.draw(mouseX, mouseY);
+}
 
 function stepTurns() {
     console.clear();
