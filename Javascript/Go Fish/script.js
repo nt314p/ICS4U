@@ -21,7 +21,7 @@ class Player {
     drawCard() {
         var card = drawCardDeck();
         this.hand.addCard(card);
-        if (this.name == "GOD") {
+        if (this instanceof HumanPlayer) {
             console.log(this.name + " drew: " + card);
         }
     }
@@ -165,6 +165,12 @@ class Hand {
         return this.hand.slice(); // shallow copy array
     }
 
+    drawHand(y) {
+        for (var i = 0; i < this.hand.length; i++) {
+            this.hand[i].draw(125 * i + 10, y);
+        }
+    }
+
     checkForMatches() { // TODO use code from removeMatches to update code
         for (var i = 0; i < this.hand.length - 1; i++) {
             for (var j = i + 1; j < this.hand.length; j++) {
@@ -208,15 +214,40 @@ class Card {
         return this.cardNum == other.cardNum;
     }
 
-    draw(x, y) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(x, y, 120, 200);
-        ctx.fillStyle = "black";
-        ctx.font = "20px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(this.getName(), x + 60, y + 50);
-        ctx.font = "80px Arial";
-        ctx.fillText(this.cardNum, x + 60, y + 150);
+    draw(x, y, flipped) {
+        var cardH = 180;
+        var cardW = 120;
+        var skyH = 50;
+        var oceanH = cardH - skyH;
+        if (flipped) {
+            var grd = ctx.createLinearGradient(x, y + skyH, x, y + cardH); // ocean
+            grd.addColorStop(0, "#c7ebff"); // light blue
+            grd.addColorStop(1, "#00578c"); // dark blue
+            ctx.fillStyle = grd;
+            ctx.fillRect(x, y + skyH, cardW, oceanH);
+
+            grd = ctx.createLinearGradient(x, y, x, y + skyH); // sky
+            grd.addColorStop(0, "#243775"); // blue
+            grd.addColorStop(0.3, "#e0acfc"); // purple
+            grd.addColorStop(1, "#fcd5ac"); // orange
+
+            ctx.fillStyle = grd;
+            ctx.fillRect(x, y, cardW, skyH);
+
+        } else {
+            if (mouseX > x && mouseX < x + cardW && mouseY > y && mouseY < y + cardH) {
+                ctx.fillStyle = "#f2ffff";
+            } else {
+                ctx.fillStyle = "white";
+            }
+            ctx.fillRect(x, y, cardW, cardH);
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(this.getName().capitalize(), x + cardW / 2, y + 50);
+            ctx.font = "100px Arial";
+            ctx.fillText(this.cardNum, x + cardW / 2, y + 150);
+        }
     }
 
     toString() {
@@ -244,6 +275,10 @@ Array.prototype.randomElement = function () {
     return this[Math.floor(Math.random() * this.length)];
 };
 
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
 function drawCardDeck() {
     return new Card(Math.floor(Math.random() * nameMap.length));
 }
@@ -252,21 +287,23 @@ function randomElement(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-document.addEventListener('mousemove', e => {
-    var rect = canvas.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
-  });
+
 
 
 // -- Actual Game Code -- //
 
-
 window.onload = function () {    // initialization
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
-    draw();
+
+    document.addEventListener('mousemove', e => {
+        var rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+    });
+
     players[0] = new HumanPlayer("GOD");
+    draw();
 
     for (var i = 0; i < numPlayers; i++) {
         if (i != 0) {
@@ -287,8 +324,11 @@ function draw() {
     window.requestAnimationFrame(draw);
     ctx.fillStyle = "lightblue";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    cq.draw(100, 100);
-    ca.draw(mouseX, mouseY);
+    //cq.draw(100, 100);
+    //ca.draw(mouseX, mouseY, true);
+    for (var i = 0; i < players.length; i++) {
+        players[i].hand.drawHand(i * 190 + 10);
+    }
 }
 
 function stepTurns() {
@@ -312,9 +352,9 @@ function HPT() {
         }
     }
 
-    players[0].takeTurn(players[playerNum], new Card(cardNum));
-    for (var i = 1; i < numPlayers; i++) {
-        if (players[i].takeTurn()) {
+    var won = players[0].takeTurn(players[playerNum], new Card(cardNum));
+    for (i = 1; i < numPlayers; i++) {
+        if (won || players[i].takeTurn()) {
             console.log(players[i].name + " wins!");
             break;
         }
