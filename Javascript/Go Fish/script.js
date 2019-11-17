@@ -21,9 +21,9 @@ class Player {
     drawCard() {
         var card = drawCardDeck();
         this.hand.addCard(card);
-        if (this instanceof HumanPlayer) {
-            console.log(this.name + " drew: " + card);
-        }
+        //if (this instanceof HumanPlayer) {
+        console.log(this.name + " drew: " + card);
+        //}
     }
 
     addCard(card) {
@@ -165,9 +165,18 @@ class Hand {
         return this.hand.slice(); // shallow copy array
     }
 
-    drawHand(y) {
+    drawHand(x, y) {
+        var dAng;
+        var overallAng = 40;
+        if (this.hand.length != 1) {
+            dAng = overallAng / (this.hand.length - 1);
+        } else {
+            dAng = 0;
+        }
         for (var i = 0; i < this.hand.length; i++) {
-            this.hand[i].draw(125 * i + 10, y);
+
+            var currAng = -overallAng / 2 + i * dAng;
+            this.hand[i].draw(80 * i + x, y - (Math.cos(currAng * Math.PI / 180) - 1) * 400, currAng);
         }
     }
 
@@ -185,17 +194,24 @@ class Hand {
     removeMatches() {
         var cards = [];
         var removedCards = [];
+        var indexesToPurge = [];
+        for (var k = 0; k < nameMap.length; k++) {
+            cards[k] = -1; // fill array with -1 for initialization
+        }
         for (var i = 0; i < this.hand.length; i++) {
             var currCard = this.hand[i];
-            if (cards[currCard.cardNum] == null) { // no cards no match
-                cards[currCard.cardNum] = currCard;
+            if (cards[currCard.cardNum] == -1) { // no cards no match
+                cards[currCard.cardNum] = i;
             } else { // card already there, we found a match
                 removedCards.push(currCard);
-                cards[currCard.cardNum] = null;
+                indexesToPurge.push(cards[currCard.cardNum]); // push previous match index
+                indexesToPurge.push(i); // push current index
+                cards[currCard.cardNum] = -1; // reset index
             }
         }
-        for (var j = 0; j < removedCards.length; j++) {
-            this.removeAll(removedCards[j]);
+        indexesToPurge.sort();
+        for (var j = indexesToPurge.length -1 ; j >= 0; j--) { 
+            this.removeIndex(indexesToPurge[j]); // iterate backwards to avoid smudging indexes
         }
         return removedCards;
     }
@@ -214,11 +230,19 @@ class Card {
         return this.cardNum == other.cardNum;
     }
 
-    draw(x, y, flipped) {
+    draw(x, y, deg, flipped) {
         var cardH = 180;
         var cardW = 120;
         var skyH = 50;
         var oceanH = cardH - skyH;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(deg * Math.PI / 180);
+
+        // ctx.globalAlpha = 0.5; // its shadow but work on gameplay boi
+        // ctx.fillStyle = "black";
+        // ctx.fillRect(- 4 - cardW / 2, - 4 - cardH / 2, cardW + 8, cardH + 8);
+        ctx.globalAlpha = 1.0;
         if (flipped) {
             var grd = ctx.createLinearGradient(x, y + skyH, x, y + cardH); // ocean
             grd.addColorStop(0, "#c7ebff"); // light blue
@@ -235,19 +259,26 @@ class Card {
             ctx.fillRect(x, y, cardW, skyH);
 
         } else {
+            ctx.strokeStyle = "#5da4f0";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(- cardW / 2, - cardH / 2, cardW, cardH);
             if (mouseX > x && mouseX < x + cardW && mouseY > y && mouseY < y + cardH) {
                 ctx.fillStyle = "#f2ffff";
             } else {
                 ctx.fillStyle = "white";
             }
-            ctx.fillRect(x, y, cardW, cardH);
+            ctx.fillRect(- cardW / 2, - cardH / 2, cardW, cardH);
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
             ctx.textAlign = "center";
-            ctx.fillText(this.getName().capitalize(), x + cardW / 2, y + 50);
+            ctx.fillText(this.getName().capitalize(), 0, 50 - cardH / 2);
             ctx.font = "100px Arial";
-            ctx.fillText(this.cardNum, x + cardW / 2, y + 150);
+            ctx.fillText(this.cardNum, 0, 150 - cardH / 2);
         }
+        //ctx.rotate(-deg * Math.PI / 180);
+        //ctx.translate(-offset.x, -offset.y);
+        // ctx.rect(-cardW / 2, -cardH / 2, cardW, cardH);
+        ctx.restore();
     }
 
     toString() {
@@ -324,10 +355,16 @@ function draw() {
     window.requestAnimationFrame(draw);
     ctx.fillStyle = "lightblue";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    //cq.draw(100, 100);
-    //ca.draw(mouseX, mouseY, true);
+    var h = mouseX;
+    var k = mouseY;
+    // cq.draw(h, k);
+    // ctx.fillStyle = "black";
+    // ctx.beginPath();
+    // ctx.ellipse(h, k, 50, 50, Math.PI / 4, 0, 2 * Math.PI);
+    // ctx.stroke();
+    // ca.draw(mouseX, mouseY, true);
     for (var i = 0; i < players.length; i++) {
-        players[i].hand.drawHand(i * 190 + 10);
+        players[i].hand.drawHand(100, i * 200 + 100);
     }
 }
 
