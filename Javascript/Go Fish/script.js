@@ -1,15 +1,21 @@
 /* jshint esversion: 6 */
 
 var nameMap = ["shark", "starfish", "whale", "turtle", "octopus", "jellyfish", "crab", "pufferfish", "tuna", "squid", "eel", "seahorse"];
+var colorMap = ["#a5bac9", "#ffde91", "#306cba", "#9aba63", "#9c69cf", "#ed9adb", "#e66060", "#f7e883", "#babbd4", "#ff9cc2", "#ccba91", "#ffdf61"];
 var names = ["Ethan", "Chris", "Christian", "Sonya", "Kaitlin", "Shree"];
 var initalCards = 5;
-var numPlayers = 4;
+var numPlayers = 6;
 var winningPoints = 10;
 var turn = 0;
 var players = [];
 var canvas, ctx;
 var mouseX = 0;
 var mouseY = 0;
+var mouseDown = false;
+var cardH = 112;
+var cardW = 80;
+var HPselectedCard = null;
+var clientRect;
 
 class Player {
     constructor(name) {
@@ -38,10 +44,6 @@ class Player {
         return this.hand.removeCard(card);
     }
 
-    checkForMatches() {
-        return this.hand.checkForMatches();
-    }
-
     ensureEnoughCards() {
         if (this.hand.hand.length == 0) { // hand is empty, draw 5 cards
             console.log(this.name + " ran out of cards, drawing 5 cards.");
@@ -55,9 +57,12 @@ class Player {
         var matches = this.hand.removeMatches();
         for (var i = 0; i < matches.length; i++) {
             console.log(this.name + " matched " + matches[i].getName());
+            this.points += 1;
         }
         this.ensureEnoughCards();
-        return matches;
+        if (this.hand.hasMatches()) {
+            this.removeMatches();
+        }
     }
 
     takeTurn(player, card) {
@@ -70,9 +75,8 @@ class Player {
             console.log(player.name + ": Sorry, go fish!");
             this.drawCard();
         }
-        var removedCards = this.removeMatches();
+        this.removeMatches();
 
-        this.points += removedCards.length;
         console.log(this.name + " has " + this.points + " point(s).");
         return this.points >= winningPoints;
     }
@@ -165,30 +169,46 @@ class Hand {
         return this.hand.slice(); // shallow copy array
     }
 
-    drawHand(x, y) {
-        var dAng;
-        var overallAng = 40;
-        if (this.hand.length != 1) {
-            dAng = overallAng / (this.hand.length - 1);
-        } else {
-            dAng = 0;
-        }
-        for (var i = 0; i < this.hand.length; i++) {
+    drawHand(x, y, deg, flipped) {
+        var totalX = 200;
+        var offset, start;
 
-            var currAng = -overallAng / 2 + i * dAng;
-            this.hand[i].draw(80 * i + x, y - (Math.cos(currAng * Math.PI / 180) - 1) * 400, currAng);
+        if (this.hand.length == 1) {
+            start = 0;
+            offset = totalX;
+        } else {
+            start = -totalX / 2;
+            offset = totalX / (this.hand.length - 1);
         }
+
+        var tW = Math.min(cardW / 2, offset / 2);
+
+        ctx.translate(x, y);
+        ctx.rotate(deg * Math.PI / 180);
+
+        for (var i = 0; i < this.hand.length; i++) {
+            var tX = i * offset + start;
+            var xHover = (mouseX > x + tX - tW && mouseX < x + tX + tW);
+            var yHover = (mouseY > y - cardH / 2 && mouseY < y + cardH / 2);
+            this.hand[i].draw(tX, 0, 0, flipped, xHover && yHover);
+        }
+
+        ctx.rotate(-deg * Math.PI / 180);
+        ctx.translate(-x, -y);
     }
 
-    checkForMatches() { // TODO use code from removeMatches to update code
-        for (var i = 0; i < this.hand.length - 1; i++) {
-            for (var j = i + 1; j < this.hand.length; j++) {
-                if (this.hand[i].equals(this.hand[j])) {
-                    return hand[i];
-                }
+    hasMatches() {
+        var cards = [];
+
+        for (var i = 0; i < this.hand.length; i++) {
+            var currCard = this.hand[i];
+            if (cards[currCard.cardNum] == null) { // no cards no match
+                cards[currCard.cardNum] = true;
+            } else { // card already there, we found a match
+                return true;
             }
         }
-        return null; // THIS SHOULD RETURN ARRAY OF ALL MATCHED CARDS
+        return false;
     }
 
     removeMatches() {
@@ -210,7 +230,7 @@ class Hand {
             }
         }
         indexesToPurge.sort();
-        for (var j = indexesToPurge.length -1 ; j >= 0; j--) { 
+        for (var j = indexesToPurge.length - 1; j >= 0; j--) {
             this.removeIndex(indexesToPurge[j]); // iterate backwards to avoid smudging indexes
         }
         return removedCards;
@@ -220,6 +240,7 @@ class Hand {
 class Card {
     constructor(cardNum) {
         this.cardNum = cardNum;
+        this.selected = false;
     }
 
     getName() {
@@ -230,12 +251,19 @@ class Card {
         return this.cardNum == other.cardNum;
     }
 
-    draw(x, y, deg, flipped) {
-        var cardH = 180;
-        var cardW = 120;
-        var skyH = 50;
+    draw(x, y, deg, flipped, mouseOver) {
+        var skyH = 30;
         var oceanH = cardH - skyH;
-        ctx.save();
+        if (mouseDown && !mouseOver) {
+            this.selected = false;
+        } else if (mouseOver || this.selected) {
+            if (mouseDown) {
+                this.selected = true;
+            }
+            y -= 60;
+        }
+
+        //ctx.save();
         ctx.translate(x, y);
         ctx.rotate(deg * Math.PI / 180);
 
@@ -248,49 +276,68 @@ class Card {
             grd.addColorStop(0, "#c7ebff"); // light blue
             grd.addColorStop(1, "#00578c"); // dark blue
             ctx.fillStyle = grd;
-            ctx.fillRect(x, y + skyH, cardW, oceanH);
+            //ctx.fillRect(-cardW/2, -skyH/2, cardW, oceanH);
 
-            grd = ctx.createLinearGradient(x, y, x, y + skyH); // sky
+            grd = ctx.createLinearGradient(-cardW / 2, y, x, y + skyH); // sky
             grd.addColorStop(0, "#243775"); // blue
             grd.addColorStop(0.3, "#e0acfc"); // purple
             grd.addColorStop(1, "#fcd5ac"); // orange
 
-            ctx.fillStyle = grd;
-            ctx.fillRect(x, y, cardW, skyH);
+            //ctx.fillStyle = grd;
 
+
+            ctx.fillStyle = "white";
+            ctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
+
+            
+            // ctx.fillStyle = "#aefcfa";
+            // ctx.beginPath();
+            // ctx.ellipse(0, 0, 30, 20, 0, 0, 2 * Math.PI);
+            // ctx.fill();
+
+            ctx.beginPath(); //diamond
+            ctx.moveTo(0, -cardH/2);
+            ctx.lineTo(-cardW / 2, 0);
+            ctx.lineTo(0, cardH/2);
+            ctx.lineTo(cardW / 2, 0);
+            ctx.closePath();
+            ctx.fillStyle = "#3464c9";
+            ctx.fill();
+
+            ctx.fillStyle = "#b7d2f7";
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 30, 40, 0, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.strokeStyle = "#5da4f0";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(- cardW / 2, - cardH / 2, cardW, cardH);
         } else {
             ctx.strokeStyle = "#5da4f0";
             ctx.lineWidth = 3;
             ctx.strokeRect(- cardW / 2, - cardH / 2, cardW, cardH);
-            if (mouseX > x && mouseX < x + cardW && mouseY > y && mouseY < y + cardH) {
-                ctx.fillStyle = "#f2ffff";
-            } else {
-                ctx.fillStyle = "white";
-            }
-            ctx.fillRect(- cardW / 2, - cardH / 2, cardW, cardH);
+            // if (mouseOver || this.selected) {
+            //     ctx.fillStyle = "#f2ffff";
+            // } else {
+            //     ctx.fillStyle = "white";
+            // }
+            ctx.fillStyle = colorMap[this.cardNum];
+            ctx.fillRect(- cardW / 2, - cardH / 2, cardW, cardH); // main rectangle
             ctx.fillStyle = "black";
-            ctx.font = "20px Arial";
+            ctx.font = "15px Arial";
             ctx.textAlign = "center";
-            ctx.fillText(this.getName().capitalize(), 0, 50 - cardH / 2);
-            ctx.font = "100px Arial";
-            ctx.fillText(this.cardNum, 0, 150 - cardH / 2);
+            ctx.fillText(this.getName().capitalize(), 0, 25 - cardH / 2);
+            ctx.font = "70px Arial";
+            ctx.fillText(this.cardNum, 0, 100 - cardH / 2);
         }
-        //ctx.rotate(-deg * Math.PI / 180);
-        //ctx.translate(-offset.x, -offset.y);
-        // ctx.rect(-cardW / 2, -cardH / 2, cardW, cardH);
-        ctx.restore();
+
+        ctx.rotate(-deg * Math.PI / 180);
+        ctx.translate(-x, -y);
+        //ctx.restore();
     }
 
     toString() {
         return this.getName() + ", " + this.cardNum;
-    }
-}
-
-class Sprite {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.draw = function () { };
     }
 }
 
@@ -326,11 +373,18 @@ function randomElement(arr) {
 window.onload = function () {    // initialization
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
+    clientRect = canvas.getBoundingClientRect();
 
     document.addEventListener('mousemove', e => {
-        var rect = canvas.getBoundingClientRect();
-        mouseX = e.clientX - rect.left;
-        mouseY = e.clientY - rect.top;
+        mouseX = e.clientX - clientRect.left;
+        mouseY = e.clientY - clientRect.top;
+    });
+
+    document.addEventListener('mousedown', e => {
+        mouseDown = true;
+    });
+    document.addEventListener('mouseup', e => {
+        mouseDown = false;
     });
 
     players[0] = new HumanPlayer("GOD");
@@ -352,7 +406,6 @@ var cq = new Card(11);
 var ca = new Card(2);
 
 function draw() {
-    window.requestAnimationFrame(draw);
     ctx.fillStyle = "lightblue";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     var h = mouseX;
@@ -364,8 +417,12 @@ function draw() {
     // ctx.stroke();
     // ca.draw(mouseX, mouseY, true);
     for (var i = 0; i < players.length; i++) {
-        players[i].hand.drawHand(100, i * 200 + 100);
+        var dAng = 360 / players.length;
+        var cAng = (i * dAng + 90) * Math.PI / 180;
+        var r = 320;
+        players[i].hand.drawHand(r * Math.cos(cAng) + 400, r * Math.sin(cAng) + 400, dAng * i, i != 0);
     }
+    window.requestAnimationFrame(draw);
 }
 
 function stepTurns() {
