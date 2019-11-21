@@ -4,7 +4,7 @@ var nameMap = ["shark", "starfish", "whale", "turtle", "octopus", "jellyfish", "
 var colorMap = ["#a5bac9", "#ffde91", "#306cba", "#9aba63", "#9c69cf", "#ed9adb", "#e66060", "#f7e883", "#babbd4", "#ff9cc2", "#ccba91", "#ffdf61"];
 var names = ["Ethan", "Chris", "Christian", "Sonya", "Kaitlin", "Shree"];
 var initalCards = 5;
-var numPlayers = 6;
+var numPlayers = 5;
 var winningPoints = 10;
 var turn = 0;
 var players = [];
@@ -79,6 +79,13 @@ class Player {
 
         console.log(this.name + " has " + this.points + " point(s).");
         return this.points >= winningPoints;
+    }
+
+    draw(x, y, deg, flipped) {
+        ctx.fillStyle = "#ebca78";
+        ctx.beginPath();
+        ctx.ellipse(x, y, 30, 30, 0, 0, 2 * Math.PI);
+        ctx.fill();
     }
 }
 
@@ -172,6 +179,7 @@ class Hand {
     drawHand(x, y, deg, flipped) {
         var totalX = 200;
         var offset, start;
+        var maxOffset = 100;
 
         if (this.hand.length == 1) {
             start = 0;
@@ -179,6 +187,8 @@ class Hand {
         } else {
             start = -totalX / 2;
             offset = totalX / (this.hand.length - 1);
+            offset = Math.min(maxOffset, offset);
+            start = -(offset * (this.hand.length - 1))/2;
         }
 
         var tW = Math.min(cardW / 2, offset / 2);
@@ -190,7 +200,7 @@ class Hand {
             var tX = i * offset + start;
             var xHover = (mouseX > x + tX - tW && mouseX < x + tX + tW);
             var yHover = (mouseY > y - cardH / 2 && mouseY < y + cardH / 2);
-            this.hand[i].draw(tX, 0, 0, flipped, xHover && yHover);
+            this.hand[i].draw(tX, 0, 0, flipped, xHover && yHover && !flipped);
         }
 
         ctx.rotate(-deg * Math.PI / 180);
@@ -289,16 +299,10 @@ class Card {
             ctx.fillStyle = "white";
             ctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
 
-            
-            // ctx.fillStyle = "#aefcfa";
-            // ctx.beginPath();
-            // ctx.ellipse(0, 0, 30, 20, 0, 0, 2 * Math.PI);
-            // ctx.fill();
-
             ctx.beginPath(); //diamond
-            ctx.moveTo(0, -cardH/2);
+            ctx.moveTo(0, -cardH / 2);
             ctx.lineTo(-cardW / 2, 0);
-            ctx.lineTo(0, cardH/2);
+            ctx.lineTo(0, cardH / 2);
             ctx.lineTo(cardW / 2, 0);
             ctx.closePath();
             ctx.fillStyle = "#3464c9";
@@ -393,7 +397,7 @@ window.onload = function () {    // initialization
     for (var i = 0; i < numPlayers; i++) {
         if (i != 0) {
             players[i] = new RandomPlayer();
-            document.getElementById("r" + i).innerHTML = players[i].name;
+            //document.getElementById("r" + i).innerHTML = players[i].name;
         }
         for (var j = 0; j < initalCards; j++) {
             players[i].drawCard();
@@ -455,8 +459,3 @@ function HPT() {
     }
     console.log(players[0].hand.toString());
 }
-
-
-
-
-
