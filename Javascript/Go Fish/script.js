@@ -3,33 +3,39 @@
 var nameMap = ["shark", "starfish", "whale", "turtle", "octopus", "jellyfish", "crab", "pufferfish", "tuna", "squid", "eel", "seahorse"];
 var colorMap = ["#a5bac9", "#ffde91", "#306cba", "#9aba63", "#9c69cf", "#ed9adb", "#e66060", "#f7e883", "#babbd4", "#ff9cc2", "#ccba91", "#ffdf61"];
 var names = ["Ethan", "Chris", "Christian", "Sonya", "Kaitlin", "Shree"];
+var playerColors = ["red", "orange", "yellow", "green", "blue", "indigo", "purple", "pink"];
 var initalCards = 5;
-var numPlayers = 5;
+var numPlayers = 8;
 var winningPoints = 10;
-var turn = 0;
 var players = [];
 var canvas, ctx;
 var mouseX = 0;
 var mouseY = 0;
 var mouseDown = false;
+var playerIconR = 230;
+var playerHandR = 330;
 var cardH = 112;
 var cardW = 80;
-var HPselectedCard = null;
+var handW = 150;
+var selectedCard = null;
+var selectedPlayer = null;
 var clientRect;
 
 class Player {
-    constructor(name) {
+    constructor(name, color) {
         this.hand = new Hand();
         this.points = 0;
         this.name = name;
+        this.color = color;
+        this.selected = false;
     }
 
     drawCard() {
         var card = drawCardDeck();
         this.hand.addCard(card);
-        //if (this instanceof HumanPlayer) {
-        console.log(this.name + " drew: " + card);
-        //}
+        if (this instanceof HumanPlayer) {
+            console.log(this.name + " drew: " + card);
+        }
     }
 
     addCard(card) {
@@ -81,23 +87,38 @@ class Player {
         return this.points >= winningPoints;
     }
 
-    draw(x, y, deg, flipped) {
-        ctx.fillStyle = "#ebca78";
+    draw(i) {
+        var dAng = 360 / players.length;
+        var deg = (i * dAng + 90) * Math.PI / 180;
+        var hidden = (i != 0);
+        ctx.fillStyle = this.color;
+        var cX = playerIconR * Math.cos(deg) + 400;
+        var cY = playerIconR * Math.sin(deg) + 400;
+        var mouseOver = (900 >= Math.pow(cX - mouseX, 2) + Math.pow(cY - mouseY, 2));
+
         ctx.beginPath();
-        ctx.ellipse(x, y, 30, 30, 0, 0, 2 * Math.PI);
+        ctx.ellipse(cX, cY, 30, 30, 0, 0, 2 * Math.PI);
         ctx.fill();
+
+        if (mouseOver && mouseDown) {
+            selectedPlayer = this;
+        }
+        this.selected = (selectedPlayer == this);
+
+        if (hidden && (this.selected || mouseOver)) {
+            ctx.strokeStyle = "white";
+            ctx.beginPath();
+            ctx.ellipse(cX, cY, 30, 30, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        this.hand.drawHand(playerHandR * Math.cos(deg) + 400, playerHandR * Math.sin(deg) + 400, deg * 180 / Math.PI - 90, hidden);
     }
 }
 
 class BullyRandom extends Player {
     constructor() {
-        var n = names.randomElement();
-        for (var i = 0; i < names.length; i++) {
-            if (n == names[i]) {
-                names.splice(i, 1);
-            }
-        }
-        super(n);
+        super(names.popRandomElement());
     }
 
     takeTurn() {
@@ -107,13 +128,7 @@ class BullyRandom extends Player {
 
 class RandomPlayer extends Player {
     constructor() {
-        var n = names.randomElement();
-        for (var i = 0; i < names.length; i++) {
-            if (n == names[i]) {
-                names.splice(i, 1);
-            }
-        }
-        super(n);
+        super(names.popRandomElement(), playerColors.popRandomElement());
     }
 
     takeTurn() {
@@ -177,19 +192,13 @@ class Hand {
     }
 
     drawHand(x, y, deg, flipped) {
-        var totalX = 200;
         var offset, start;
-        var maxOffset = 100;
+        var maxOffset = 60;
 
-        if (this.hand.length == 1) {
-            start = 0;
-            offset = totalX;
-        } else {
-            start = -totalX / 2;
-            offset = totalX / (this.hand.length - 1);
-            offset = Math.min(maxOffset, offset);
-            start = -(offset * (this.hand.length - 1))/2;
-        }
+        start = -handW / 2;
+        offset = handW / (this.hand.length - 1);
+        offset = Math.min(maxOffset, offset);
+        start = -(offset * (this.hand.length - 1)) / 2;
 
         var tW = Math.min(cardW / 2, offset / 2);
 
@@ -262,40 +271,20 @@ class Card {
     }
 
     draw(x, y, deg, flipped, mouseOver) {
-        var skyH = 30;
-        var oceanH = cardH - skyH;
-        if (mouseDown && !mouseOver) {
-            this.selected = false;
-        } else if (mouseOver || this.selected) {
-            if (mouseDown) {
-                this.selected = true;
-            }
+
+        if (mouseOver && mouseDown) {
+            selectedCard = this;
+        }
+        this.selected = (selectedCard == this);
+
+        if (mouseOver || this.selected) {
             y -= 60;
         }
 
-        //ctx.save();
-        ctx.translate(x, y);
+        ctx.translate(x, y); // translate
         ctx.rotate(deg * Math.PI / 180);
 
-        // ctx.globalAlpha = 0.5; // its shadow but work on gameplay boi
-        // ctx.fillStyle = "black";
-        // ctx.fillRect(- 4 - cardW / 2, - 4 - cardH / 2, cardW + 8, cardH + 8);
-        ctx.globalAlpha = 1.0;
         if (flipped) {
-            var grd = ctx.createLinearGradient(x, y + skyH, x, y + cardH); // ocean
-            grd.addColorStop(0, "#c7ebff"); // light blue
-            grd.addColorStop(1, "#00578c"); // dark blue
-            ctx.fillStyle = grd;
-            //ctx.fillRect(-cardW/2, -skyH/2, cardW, oceanH);
-
-            grd = ctx.createLinearGradient(-cardW / 2, y, x, y + skyH); // sky
-            grd.addColorStop(0, "#243775"); // blue
-            grd.addColorStop(0.3, "#e0acfc"); // purple
-            grd.addColorStop(1, "#fcd5ac"); // orange
-
-            //ctx.fillStyle = grd;
-
-
             ctx.fillStyle = "white";
             ctx.fillRect(-cardW / 2, -cardH / 2, cardW, cardH);
 
@@ -308,23 +297,19 @@ class Card {
             ctx.fillStyle = "#3464c9";
             ctx.fill();
 
-            ctx.fillStyle = "#b7d2f7";
+            ctx.fillStyle = "#b7d2f7"; // oval in middle
             ctx.beginPath();
             ctx.ellipse(0, 0, 30, 40, 0, 0, 2 * Math.PI);
             ctx.fill();
 
             ctx.strokeStyle = "#5da4f0";
             ctx.lineWidth = 3;
-            ctx.strokeRect(- cardW / 2, - cardH / 2, cardW, cardH);
+            ctx.strokeRect(- cardW / 2, - cardH / 2, cardW, cardH); // outer card stroke
         } else {
             ctx.strokeStyle = "#5da4f0";
             ctx.lineWidth = 3;
             ctx.strokeRect(- cardW / 2, - cardH / 2, cardW, cardH);
-            // if (mouseOver || this.selected) {
-            //     ctx.fillStyle = "#f2ffff";
-            // } else {
-            //     ctx.fillStyle = "white";
-            // }
+
             ctx.fillStyle = colorMap[this.cardNum];
             ctx.fillRect(- cardW / 2, - cardH / 2, cardW, cardH); // main rectangle
             ctx.fillStyle = "black";
@@ -335,9 +320,8 @@ class Card {
             ctx.fillText(this.cardNum, 0, 100 - cardH / 2);
         }
 
-        ctx.rotate(-deg * Math.PI / 180);
+        ctx.rotate(-deg * Math.PI / 180); // untranslate
         ctx.translate(-x, -y);
-        //ctx.restore();
     }
 
     toString() {
@@ -353,8 +337,8 @@ Hand.prototype.toString = function () {
     return this.hand.toString();
 };
 
-Array.prototype.randomElement = function () {
-    return this[Math.floor(Math.random() * this.length)];
+Array.prototype.popRandomElement = function () {
+    return this.splice(Math.floor(Math.random() * this.length), 1)[0];
 };
 
 String.prototype.capitalize = function () {
@@ -369,9 +353,6 @@ function randomElement(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-
-
-
 // -- Actual Game Code -- //
 
 window.onload = function () {    // initialization
@@ -380,6 +361,7 @@ window.onload = function () {    // initialization
     clientRect = canvas.getBoundingClientRect();
 
     document.addEventListener('mousemove', e => {
+        clientRect = canvas.getBoundingClientRect();
         mouseX = e.clientX - clientRect.left;
         mouseY = e.clientY - clientRect.top;
     });
@@ -406,27 +388,19 @@ window.onload = function () {    // initialization
     }
     console.log(players[0].hand.toString());
 };
-var cq = new Card(11);
-var ca = new Card(2);
 
 function draw() {
     ctx.fillStyle = "lightblue";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    var h = mouseX;
-    var k = mouseY;
-    // cq.draw(h, k);
-    // ctx.fillStyle = "black";
-    // ctx.beginPath();
-    // ctx.ellipse(h, k, 50, 50, Math.PI / 4, 0, 2 * Math.PI);
-    // ctx.stroke();
-    // ca.draw(mouseX, mouseY, true);
+
     for (var i = 0; i < players.length; i++) {
-        var dAng = 360 / players.length;
-        var cAng = (i * dAng + 90) * Math.PI / 180;
-        var r = 320;
-        players[i].hand.drawHand(r * Math.cos(cAng) + 400, r * Math.sin(cAng) + 400, dAng * i, i != 0);
+        players[i].draw(i);
     }
+
     window.requestAnimationFrame(draw);
+    if (mouseDown) { // ensure mouseDown is true for only one frame
+        mouseDown = false;
+    }
 }
 
 function stepTurns() {
