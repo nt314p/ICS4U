@@ -19,11 +19,14 @@ var cardW = 80;
 var handW = 150;
 var msgX = 400;
 var msgY = 340;
-var msgW = 200;
+var msgW = 260;
 var msgH = 120;
 var selectedCard = null;
 var selectedPlayer = null;
 var hoverPlayer = null;
+var takingTurns = false;
+var gameOver = false;
+var skipDialogue = false;
 var clientRect;
 
 class Button {
@@ -43,6 +46,8 @@ class Button {
         var y = this.y;
         var w = this.w;
         var h = this.h;
+        var mouseOver = (mouseX <= x + w / 2 && mouseX >= x - w / 2);
+        mouseOver &= (mouseY >= y - h / 2 && mouseY <= y + h / 2);
         ctx.fillStyle = this.color;
         ctx.fillRect(x - w / 2, y - h / 2, w, h);
         ctx.fillStyle = "white";
@@ -50,11 +55,18 @@ class Button {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(this.text, x, y);
-        if (mouseX <= x + w / 2 && mouseX >= x - w / 2 && mouseY >= y - h / 2 && mouseY <= y + h / 2) {
+        if (mouseOver) {
             ctx.strokeStyle = "white";
             ctx.beginPath();
             ctx.rect(x - w / 2, y - h / 2, w, h);
             ctx.stroke();
+        }
+        if (mouseDown && !this.down && mouseOver) {
+            this.down = true;
+            HPT(selectedPlayer, selectedCard);
+        }
+        if (this.down && !mouseDown) {
+            this.down = false;
         }
     }
 }
@@ -130,7 +142,13 @@ class Player {
 
     async say(message, ms) {
         this.message = message;
-        let d = await delay(ms);
+        for (var i = 0; i < 10; i++) {
+            await delay(ms / 10);
+            if (skipDialogue) { // click to skip dialogue
+                skipDialogue = false;
+                break;
+            }
+        }
         this.message = null;
     }
 
@@ -146,14 +164,16 @@ class Player {
         this.cY = playerIconR * Math.sin(deg) + canvas.width / 2;
         var mouseOver = (900 >= Math.pow(this.cX - mouseX, 2) + Math.pow(this.cY - mouseY, 2));
 
-        if (mouseOver && mouseDown) {
-            if (selectedPlayer == this) {
-                selectedPlayer = null;
-            } else {
-                selectedPlayer = this;
+        if (i != 0) { // cannot select self
+            if (mouseOver && mouseDown) {
+                if (selectedPlayer == this) {
+                    selectedPlayer = null;
+                } else {
+                    selectedPlayer = this;
+                }
             }
+            this.selected = (selectedPlayer == this);
         }
-        this.selected = (selectedPlayer == this);
 
         if (mouseOver) {
             hoverPlayer = this;
@@ -161,32 +181,14 @@ class Player {
             hoverPlayer = null;
         }
 
-        if (hidden && ((this.selected && (hoverPlayer == this || hoverPlayer == null)) || mouseOver)) {
-
-            ctx.strokeStyle = "white";
-            ctx.beginPath(); // player's circle icon
-            ctx.ellipse(this.cX, this.cY, 31, 31, 0, 0, 2 * Math.PI);
-            ctx.stroke();
-
-            // ctx.beginPath(); // line pointing to player
-            // ctx.moveTo(msgX, msgY);
-            // ctx.lineTo(cX, cY);
-            // ctx.stroke();
-            // ctx.fillStyle = "white";
-            // ctx.fillRect(msgX - msgW / 2, msgY - msgH / 2, msgW, msgH); // message box
-            // ctx.strokeStyle = "#5da4f0";
-            // ctx.strokeRect(msgX - msgW / 2, msgY - msgH / 2, msgW, msgH); // outer card stroke
-            // ctx.fillStyle = "#5da4f0";
-            // ctx.font = "30px Arial";
-            // ctx.fillText(this.name, msgX, 300);
-            // ctx.font = "20px Arial";
-            this.drawMsg("Points: " + this.points);
-        }
-
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.color; // player icon
         ctx.beginPath();
         ctx.ellipse(this.cX, this.cY, 30, 30, 0, 0, 2 * Math.PI);
         ctx.fill();
+
+        if (((this.selected && (hoverPlayer == this || hoverPlayer == null)) || mouseOver) && !takingTurns) {
+            this.drawMsg("Points: " + this.points);
+        }
 
         this.hand.drawHand(playerHandR * Math.cos(deg) + 400, playerHandR * Math.sin(deg) + 400, deg * 180 / Math.PI - 90, hidden);
     }
@@ -196,6 +198,13 @@ class Player {
         ctx.beginPath(); // line pointing to player
         ctx.moveTo(msgX, msgY);
         ctx.lineTo(this.cX, this.cY);
+        ctx.stroke();
+        ctx.fillStyle = this.color; // player icon
+        ctx.beginPath();
+        ctx.ellipse(this.cX, this.cY, 30, 30, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath(); // player's circle outline
+        ctx.ellipse(this.cX, this.cY, 31, 31, 0, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fillStyle = "white";
         ctx.fillRect(msgX - msgW / 2, msgY - msgH / 2, msgW, msgH); // message box
@@ -209,9 +218,9 @@ class Player {
     }
 }
 
-class BullyRandom extends Player {
+class BullyPlayer extends Player {
     constructor() {
-        super(names.popRandomElement());
+        super(names.popRandomElement(), playerColors.popRandomElement());
     }
 
     takeTurn() {
@@ -234,11 +243,13 @@ class RandomPlayer extends Player {
 }
 
 class HumanPlayer extends Player {
-    constructor(name) {
-        super(name);
+    constructor(name, color) {
+        super(name, color);
     }
 
     takeTurn(player, card) {
+        selectedPlayer = null; // reset turn selections
+        selectedCard = null;
         return super.takeTurn(player, card);
     }
 }
@@ -364,18 +375,19 @@ class Card {
     }
 
     draw(x, y, deg, flipped, mouseOver) {
-
-        if (mouseOver && mouseDown) {
-            if (selectedCard == this) {
-                selectedCard = null;
-            } else {
-                selectedCard = this;
+        if (!takingTurns) {
+            if (mouseOver && mouseDown) {
+                if (selectedCard == this) {
+                    selectedCard = null;
+                } else {
+                    selectedCard = this;
+                }
             }
-        }
-        this.selected = (selectedCard == this);
+            this.selected = (selectedCard == this);
 
-        if (mouseOver || this.selected) {
-            y -= 60;
+            if (mouseOver || this.selected) {
+                y -= 60;
+            }
         }
 
         ctx.translate(x, y); // translate
@@ -436,6 +448,10 @@ Hand.prototype.toString = function () {
 
 Array.prototype.popRandomElement = function () {
     return this.splice(Math.floor(Math.random() * this.length), 1)[0];
+};
+
+Array.prototype.remove = function (index) {
+    return this.splice(index, 1)[0];
 };
 
 Array.prototype.randomElement = function () {
@@ -507,18 +523,29 @@ window.onload = function () {    // initialization -----
 
     document.addEventListener('mousedown', e => {
         mouseDown = true;
+        skipDialogue = true;
+        console.log("eventdown");
     });
-    // document.addEventListener('mouseup', e => {
-    //     mouseDown = false;
-    // });
 
-    players[0] = new HumanPlayer("GOD");
+    var name = null;
+    while (name == null) {
+        name = prompt("Please enter your name:", "Bill Gates");
+    }
+    var color = null;
+    while (color == null) {
+        color = prompt("Please enter your player color:", "Blue");
+    }
+    var colIndex = playerColors.indexOf(color);
+    if (colIndex != -1) {
+        playerColors.remove(colIndex);
+    }
+
+    players[0] = new HumanPlayer(name, color);
     draw();
 
     for (var i = 0; i < numPlayers; i++) {
         if (i != 0) {
-            players[i] = new RandomPlayer();
-            document.getElementById("r" + i).innerHTML = players[i].name;
+            players[i] = new BullyPlayer();
         }
         for (var j = 0; j < initalCards; j++) {
             players[i].drawCard();
@@ -532,13 +559,14 @@ var turnButton = new Button(400, 500, 140, 80, "Take Turn", "#3464c9", 1);
 
 function draw() {
     ctx.fillStyle = "lightblue";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // draw background
 
-    for (var i = 0; i < players.length; i++) {
+    for (var i = 0; i < players.length; i++) { // draw players
         players[i].draw(i);
     }
+
     if (selectedCard != null && selectedPlayer != null) {
-        turnButton.draw();
+        turnButton.draw(); // if turn criteria met, show button
     }
 
     window.requestAnimationFrame(draw);
@@ -547,35 +575,24 @@ function draw() {
     }
 }
 
-function stepTurns() {
-    console.clear();
-    for (var i = 1; i < numPlayers; i++) {
-        if (players[i].takeTurn()) {
-            console.log(players[i].name + " wins!");
-            break;
-        }
-    }
-}
-
 async function HPT() {
     console.clear();
-    var playerNum;
-    var cardNum = document.getElementById("cardval").value;
+    takingTurns = true;
+    skipDialogue = false;
 
-    for (var i = 1; i < numPlayers; i++) {
-        if (document.getElementById("c" + i).checked) {
-            playerNum = i;
-        }
-    }
+    var won = await players[0].takeTurn(selectedPlayer, selectedCard);
 
-    var won = await players[0].takeTurn(players[playerNum], new Card(cardNum));
     for (i = 1; i < numPlayers; i++) {
         await players[i].takeTurn();
         if (won) { // fix player winning
             console.log(players[i].name + " wins!");
             break;
         }
-        //let d = await delay(1000);
+    }
+
+    for (i = 0; i < numPlayers; i++) {
+        players[i].removeMatches();
     }
     console.log(players[0].hand.toString());
+    takingTurns = false;
 }
