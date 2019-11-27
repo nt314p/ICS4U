@@ -5,8 +5,8 @@ var colorMap = ["#a5bac9", "#ffde91", "#306cba", "#9aba63", "#9c69cf", "#ed9adb"
 var names = ["Ethan", "Chris", "Christian", "Sonya", "Kaitlin", "Shree", "Karol", "Alex"];
 var playerColors = ["red", "orange", "#fcf11b", "green", "blue", "indigo", "purple", "pink"];
 var initalCards = 5;
-var numPlayers = 6;
-var winningPoints = 10;
+var numPlayers = -1; // to be set by prompt
+var winningPoints = 4;
 var players = [];
 var canvas, ctx;
 var mouseX = 0;
@@ -25,6 +25,7 @@ var selectedCard = null;
 var selectedPlayer = null;
 var hoverPlayer = null;
 var takingTurns = false;
+var winningPlayer = null;
 var gameOver = false;
 var skipDialogue = false;
 var clientRect;
@@ -87,7 +88,7 @@ class Player {
         var card = drawCardDeck();
         this.hand.addCard(card);
         if (this instanceof HumanPlayer) {
-            console.log(this.name + " drew: " + card);
+            log(this.name + " drew " + card + ".");
         }
     }
 
@@ -105,7 +106,7 @@ class Player {
 
     ensureEnoughCards() {
         if (this.hand.hand.length == 0) { // hand is empty, draw 5 cards
-            console.log(this.name + " ran out of cards, drawing 5 cards.");
+            log(this.name + " ran out of cards, drawing 5 cards.");
             for (var i = 0; i < 5; i++) {
                 this.drawCard();
             }
@@ -115,7 +116,7 @@ class Player {
     removeMatches() {
         var matches = this.hand.removeMatches();
         for (var i = 0; i < matches.length; i++) {
-            console.log(this.name + " matched " + matches[i].getName());
+            log(this.name + " matched " + matches[i].getName() + "!");
             this.points += 1;
         }
         this.ensureEnoughCards();
@@ -125,19 +126,23 @@ class Player {
     }
 
     async takeTurn(player, card) {
+        log(this.name + " is asking " + player.name + " for a " + card.toString() + ".");
         await this.say("Hey " + player.name + ", do you have a " + card.getName() + "?", 2000);
         if (player.hasCard(card)) { // get card
+            log(player.name + " has a " + card.toString() + ".");
             await player.say("Yes I do...", 2000);
             this.addCard(player.removeCard(card));
             player.ensureEnoughCards();
         } else { // Go Fish!
+            log(player.name + " does not have a " + card.toString() + ".");
             await player.say("Sorry, go fish!", 2000);
             this.drawCard();
         }
         this.removeMatches();
 
-        console.log(this.name + " has " + this.points + " point(s).");
-        return this.points >= winningPoints;
+        if (this.points >= winningPoints) {
+            winningPlayer = this;
+        }
     }
 
     async say(message, ms) {
@@ -434,12 +439,12 @@ class Card {
     }
 
     toString() {
-        return this.getName() + ", " + this.cardNum;
+        return this.getName();
     }
 }
 
 Card.prototype.toString = function () {
-    return this.getName() + ":" + this.cardNum;
+    return this.getName();
 };
 
 Hand.prototype.toString = function () {
@@ -468,6 +473,10 @@ function drawCardDeck() {
 
 function randomElement(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function log(text) {
+    document.getElementById("log").innerText += (text + "\n\n");
 }
 
 function sleep(ms) {
@@ -527,13 +536,18 @@ window.onload = function () {    // initialization -----
         console.log("eventdown");
     });
 
+    while (isNaN(numPlayers) || numPlayers > 8 || numPlayers < 2) {
+        numPlayers = prompt("Please enter the number of players:", 4);
+        numPlayers = parseInt(numPlayers);
+    }
+
     var name = null;
     while (name == null) {
         name = prompt("Please enter your name:", "Bill Gates");
     }
     var color = null;
     while (color == null) {
-        color = prompt("Please enter your player color:", "Blue");
+        color = prompt("Please enter your player color:", "gold");
     }
     var colIndex = playerColors.indexOf(color);
     if (colIndex != -1) {
@@ -545,7 +559,12 @@ window.onload = function () {    // initialization -----
 
     for (var i = 0; i < numPlayers; i++) {
         if (i != 0) {
-            players[i] = new BullyPlayer();
+            var rand = Math.random();
+            if (rand < 0.3) { // randomizing player types
+                players[i] = new BullyPlayer();
+            } else {
+                players[i] = new RandomPlayer();
+            }
         }
         for (var j = 0; j < initalCards; j++) {
             players[i].drawCard();
@@ -565,11 +584,20 @@ function draw() {
         players[i].draw(i);
     }
 
-    if (selectedCard != null && selectedPlayer != null) {
+    if (selectedCard != null && selectedPlayer != null && !gameOver) {
         turnButton.draw(); // if turn criteria met, show button
     }
 
+    if (winningPlayer != null && !gameOver) {
+        log(winningPlayer.name + " won!");
+        var choice = confirm(winningPlayer.name + " wins!\nPlay again?");
+        if (choice) {
+            location.reload();
+        }
+        gameOver = true;
+    }
     window.requestAnimationFrame(draw);
+
     if (mouseDown) { // ensure mouseDown is true for only one frame
         mouseDown = false;
     }
@@ -577,6 +605,7 @@ function draw() {
 
 async function HPT() {
     console.clear();
+    log("--------------------------------------------------------");
     takingTurns = true;
     skipDialogue = false;
 
