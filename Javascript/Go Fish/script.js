@@ -6,7 +6,7 @@ var names = ["Ethan", "Chris", "Christian", "Sonya", "Kaitlin", "Shree", "Karol"
 var playerColors = ["red", "orange", "#fcf11b", "green", "blue", "indigo", "purple", "pink"];
 var initalCards = 5;
 var numPlayers = -1; // to be set by prompt
-var winningPoints = 4;
+var winningPoints = 10;
 var players = [];
 var canvas, ctx;
 var mouseX = 0;
