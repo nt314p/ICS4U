@@ -38,14 +38,14 @@ public class Solver {
 		}
 		Point start = new Point(0, 0);
 		Point end = new Point(3, 5);
+		int moves = 4;
 		
-		int moves = 5;
 		root = new PathNode(start);
 
 		kingknights(start, end, moves);
 		PathNode sol = root;
-		System.out.println(sol.branches());
 		System.out.print(sol.toString());
+		System.out.println(sol.tails());
 	}
 	
 	public static void kingknights(Point start, Point end, int moves) {

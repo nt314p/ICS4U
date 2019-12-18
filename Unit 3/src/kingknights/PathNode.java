@@ -24,13 +24,16 @@ public class PathNode {
 		return paths.get(index);
 	}
 
-	public int paths() {
-		return pathsR(this, 0);
+	public int tails() {
+		return tailsR(this, 0);
 	}
 
-	private int pathsR(PathNode p, int paths) {
+	private int tailsR(PathNode p, int paths) {
+		if (p.paths.size() == 0) {
+			return 1;
+		}
 		for (int i = 0; i < p.paths.size(); ++i) {
-			paths += pathsR(p.paths.get(i), 0);
+			paths += tailsR(p.paths.get(i), 0);
 		}
 		return paths;
 	}
@@ -41,16 +44,16 @@ public class PathNode {
 
 	private String toStringR(int n) {
 		if (paths.size() > 0) {
-			String ret = "";
+			String ret = point.toString() + "+-";
 			for (int i = paths.size()-1; i >= 0; --i) {
 				if (i != paths.size()-1) {
-					for (int j = 0; j < n; ++j) {
+					for (int j = 0; j <= n; ++j) {
 						ret += "      | ";
 					}
 						ret += "      +-";
 					
 				}
-				ret += point.toString() + ", " + paths.get(i).toStringR(n + 1);
+				ret += paths.get(i).toStringR(n + 1);
 
 			}
 			return ret;
