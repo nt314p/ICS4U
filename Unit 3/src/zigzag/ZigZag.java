@@ -12,7 +12,7 @@ public class ZigZag {
 	
 	public static int solveSmart(int[] arr) {
 		if (arr.length < 2)
-			return 0;
+			return arr.length;
 		int flips = 2;
 		int d = (int) Math.signum(arr[1] - arr[0]);
 		for (int i = 1; i < arr.length - 1; i++) {

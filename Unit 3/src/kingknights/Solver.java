@@ -38,7 +38,7 @@ public class Solver {
 		}
 		Point start = new Point(0, 0);
 		Point end = new Point(3, 5);
-		int moves = 4;
+		int moves = 7;
 		
 		root = new PathNode(start);
 
