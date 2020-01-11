@@ -36,6 +36,10 @@ public class Point {
 	public String toString() {
 		return "(" + x + ", " + y + ")";
 	}
+	
+	public int[] toArr() {
+		return new int[] {x, y};
+	}
 
 	public boolean equals(Point other) {
 		return this.x == other.x && this.y == other.y;

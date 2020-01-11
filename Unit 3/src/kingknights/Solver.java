@@ -36,16 +36,16 @@ public class Solver {
 				board[i][j] = Integer.MAX_VALUE;
 			}
 		}
-		Point start = new Point(0, 0);
+		Point start = new Point(1, 2);
 		Point end = new Point(3, 5);
-		int moves = 7;
+		int moves = 4;
 		
 		root = new PathNode(start);
-
-		kingknights(start, end, moves);
+		
 		PathNode sol = root;
-		System.out.print(sol.toString());
-		System.out.println(sol.tails());
+		kingknights(start, end, moves);
+		System.out.println("Solution: " + sol.tails());
+		//System.out.print(sol.toString()); // uncomment for cool trace of paths
 	}
 	
 	public static void kingknights(Point start, Point end, int moves) {
@@ -60,7 +60,7 @@ public class Solver {
 			} // else no path found
 			return false;
 		}
-		// uncomment for "optimized" moves
+		// uncomment for "optimized" moves, gives incorrect solution
 //		if (currMoves < board[start.getX()][start.getY()]) { // current move is better than other moves
 //			board[start.getX()][start.getY()] = currMoves;
 //		} else {
@@ -75,7 +75,7 @@ public class Solver {
 				boolean pathFound = solve(newMove, end, moves, currMoves+1, newPath);
 				found |= pathFound;
 				if (!pathFound) {
-					path.remove(newPath);
+					path.remove(newPath); // path not found, trim from list
 				}
 			}
 		}
