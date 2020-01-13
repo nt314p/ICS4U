@@ -35,10 +35,10 @@
           posts: []
         }
       },
-      created() {
-      let uri = 'http://localhost:4000/posts';
+      created() { // function called once vue has been created
+      let uri = 'http://localhost:4000/posts'; // make web service call
       this.axios.get(uri).then(response => {
-        this.posts = response.data;
+        this.posts = response.data; // grab posts
       });
     },
     methods: {

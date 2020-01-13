@@ -6,6 +6,7 @@ let Post = require('./post.model');
 
 // Defined store route
 postRoutes.route('/add').post(function (req, res) {
+  console.log(req); // log the request
   let post = new Post(req.body);
   post.save()
     .then(() => {

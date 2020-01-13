@@ -19,7 +19,7 @@
         </div>
       </div>
       <br />
-      <div class="form-group">
+      <div class="for]m-group">
         <button class="btn btn-primary">Create</button>
       </div>
     </form>
@@ -35,8 +35,8 @@ export default {
   },
   methods: {
     addPost(){
-    let uri = 'http://localhost:4000/posts/add';
-    this.axios.post(uri, this.post).then(() => {
+    let uri = 'http://localhost:4000/posts/add'; // we've mapped urls to web services
+    this.axios.post(uri, this.post).then(() => { // so the "/add" runs the store function in router
        this.$router.push({name: 'posts'});
     });
 }
