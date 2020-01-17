@@ -8,6 +8,7 @@ const config = require('./DB.js');
 const postRoute = require('./post.route.js');
 
 mongoose.Promise = global.Promise;
+mongoose.set('useFindAndModify', false);
 mongoose.connect(config.DB, { useNewUrlParser: true }).then(
   () => { console.log('Database is connected') },
   err => { console.log('Can not connect to the database'+ err)}

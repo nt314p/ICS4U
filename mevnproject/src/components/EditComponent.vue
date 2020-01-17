@@ -11,6 +11,14 @@
         </div>
         </div>
         <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Post Author:</label>
+            <input type="text" class="form-control" v-model="post.author">
+          </div>
+        </div>
+        </div>
+        <div class="row">
           <div class="col-md-6">
             <div class="form-group">
               <label>Post Body:</label>
@@ -43,6 +51,7 @@
         updatePost() {
           let uri = `http://localhost:4000/posts/update/${this.$route.params.id}`;
           this.axios.post(uri, this.post).then(() => {
+            console.log(this.post)
             this.$router.push({name: 'posts'});
           });
         }

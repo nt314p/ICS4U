@@ -13,6 +13,14 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
+            <label>Post Author:</label>
+            <input type="text" class="form-control" v-model="post.author" />
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
             <label>Post Body:</label>
             <textarea class="form-control" v-model="post.body" rows="5"></textarea>
           </div>

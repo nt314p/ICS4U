@@ -10,7 +10,7 @@ postRoutes.route('/add').post(function (req, res) {
   let post = new Post(req.body);
   post.save()
     .then(() => {
-      res.status(200).json({'business': 'business in added successfully'});
+      res.status(200).json({'business': 'business is added successfully'});
     })
     .catch(() => {
       res.status(400).send("unable to save to database");
@@ -47,6 +47,7 @@ postRoutes.route('/update/:id').post(function (req, res) {
       res.status(404).send("data is not found");
     else {
         post.title = req.body.title;
+        post.author = req.body.author;
         post.body = req.body.body;
         post.save().then(() => {
           res.json('Update complete');

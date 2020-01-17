@@ -12,7 +12,8 @@
     <table class="table table-hover">
       <thead>
         <tr>
-          <th>Title</th>
+          <th width="10px">Title</th>
+          <th>Author</th>
           <th>Body</th>
           <th>Actions</th>
         </tr>
@@ -20,6 +21,7 @@
       <tbody>
         <tr v-for="post in posts" :key="post._id">
           <td>{{ post.title }}</td>
+          <td>{{ post.author }}</td>
           <td>{{ post.body }}</td>
           <td>
             <router-link :to="{name: 'edit', params: { id: post._id }}" class="btn btn-primary">Edit</router-link>
