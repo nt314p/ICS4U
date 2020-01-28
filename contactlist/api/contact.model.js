@@ -16,7 +16,7 @@ let Contact = new Schema({
     type: String
   },
   bday: {
-    type: String
+    type: Date
   }
 },{
     collection: 'contacts'

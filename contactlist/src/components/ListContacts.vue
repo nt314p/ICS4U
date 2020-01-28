@@ -1,7 +1,15 @@
 <template>
   <div>
     <div class="q-pa-md">
-      <q-table :data="data" :columns="columns" row-key="name" :separator="horizontal"/>
+      <q-table :data="data" :columns="columns" row-key="name" :separator="separator">
+        <template v-slot:no-data="{ icon, message, filter }">
+          <div class="full-width row flex-center text-accent q-gutter-sm">
+            <q-icon size="2em" name="sentiment_dissatisfied" />
+            <span>Error 404. You have no friends!</span>
+            <q-icon size="2em" :name="filter ? 'filter_b_and_w' : icon" />
+          </div>
+        </template>
+      </q-table>
     </div>
   </div>
   <!--
@@ -46,14 +54,15 @@
 export default {
   data() {
     return {
+      separator: "horizontal",
       data: [],
       columns: [
         { name: "firstName", label: "First Name", field: "firstName" },
-        { name: "lastName", label: "Last Name", field: "lastName"},
-        { name: "phoneNumber", label: "Phone Number", field: "phoneNumber"},
-        { name: "email", label: "Email", field: "email"},
-        { name: "bday", label: "Birthday", field: "bday"}
-      ],
+        { name: "lastName", label: "Last Name", field: "lastName" },
+        { name: "phoneNumber", label: "Phone Number", field: "phoneNumber" },
+        { name: "email", label: "Email", field: "email" },
+        { name: "bday", label: "Birthday", field: "bday" }
+      ]
     };
   },
   created() {
@@ -61,8 +70,8 @@ export default {
     let uri = "http://localhost:4000/contacts"; // make web service call
     this.axios.get(uri).then(response => {
       this.data = response.data; // grab contacts
-      console.log(this.data)
+      console.log(this.data);
     });
-  },
+  }
 };
 </script>
