@@ -1,7 +1,7 @@
 <template>
-  <q-layout view="hHh lpR fFf">
-    <div class="q-pa-md">
-      <div class="q-gutter-y-md" style="max-width: 600px">
+  <div>
+    <q-layout-header>
+      <div class="q-gutter-y-md">
         <q-tabs
           v-model="tab"
           dense
@@ -9,16 +9,20 @@
           class="bg-primary text-white shadow-2"
           :breakpoint="0"
         >
-          <q-tab name="mails" icon="mail" />
-          <q-tab name="alarms" icon="alarm" />
+          <q-route-tab name="list" icon="list" to="/" exact />
+          <q-route-tab name="edit" icon="create" to="/edit" exact />
+          <q-route-tab name="search" icon="search" to="/search" exact />
+          <q-route-tab name="create" icon="add_box" to="/create" exact />
+          <q-route-tab name="view" icon="account_box" to="/view" exact />
         </q-tabs>
       </div>
-    </div>
-
-    <q-page-container>
-      <router-view />
-    </q-page-container>
-  </q-layout>
+    </q-layout-header>
+    <q-layout>
+      <q-page-container>
+        <router-view />
+      </q-page-container>
+    </q-layout>
+  </div>
 </template>
 
 <script>

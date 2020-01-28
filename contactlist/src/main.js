@@ -7,9 +7,12 @@ import EditComponent from './components/EditContact.vue'
 import ViewComponent from './components/ViewContact.vue'
 
 import './quasar'
-import 'bootstrap/dist/css/bootstrap.min.css'
+//import 'bootstrap/dist/css/bootstrap.min.css'
 
+import VueAxios from 'vue-axios';
+import axios from 'axios';
 
+Vue.use(VueAxios, axios);
 
 import VueRouter from 'vue-router';
 Vue.use(VueRouter);
@@ -47,14 +50,7 @@ const routes = [
 const router = new VueRouter({ mode: 'history', routes: routes});
 
 new Vue({
-  el: '#app',
   router,
-  data() {
-    return { reactive: true }
-  }
-});
+  render: h => h(App)
 
-
-
-var m = Vue.util.extend({ router }, App);
-m.$mount('#app');
+}).$mount('#app')
