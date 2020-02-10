@@ -39,6 +39,17 @@ contactRoutes.route('/edit/:id').get(function (req, res) {
   });
 });
 
+// Defined view route
+contactRoutes.route('/view/:id').get(function (req, res) {
+  let id = req.params.id;
+  Contact.findById(id, function (err, contact) {
+    if (err) {
+      res.json(err);
+    }
+    res.json(contact);
+  });
+});
+
 //  Defined update route
 contactRoutes.route('/update/:id').post(function (req, res) {
   Contact.findById(req.params.id, function (err, contact) {

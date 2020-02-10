@@ -32,7 +32,7 @@ const routes = [
   },
   {
       name: 'view',
-      path: '/contacts/:id',
+      path: '/view/:id',
       component: ViewComponent
   },
   {
